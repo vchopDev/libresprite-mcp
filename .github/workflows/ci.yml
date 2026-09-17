@@ -33,15 +33,18 @@ jobs:
           python-version: "3.12"
       - name: Install project (dev)
         run: pip install -e . && pip install pytest
-      - name: Fetch latest LibreSprite AppImage
+      - name: Fetch latest LibreSprite release (Linux)
         run: |
           set -euo pipefail
+          # The Linux release asset is a zip containing a single AppImage.
           asset_url=$(curl -fsSL https://api.github.com/repos/LibreSprite/LibreSprite/releases/latest \
-            | grep -oE '"browser_download_url": *"[^"]*linux[^"]*AppImage"' \
-            | grep -oE 'https://[^"]+')
-          curl -fsSL -o libresprite.AppImage "$asset_url"
-          chmod +x libresprite.AppImage
-          echo "LIBRESPRITE_BIN=$PWD/libresprite.AppImage" >> "$GITHUB_ENV"
+            | grep -oE '"browser_download_url": *"[^"]*linux[^"]*\.zip"' \
+            | grep -oE 'https://[^"]+' | head -n1)
+          curl -fsSL -o libresprite.zip "$asset_url"
+          unzip -o libresprite.zip -d libresprite-dist
+          appimage=$(find libresprite-dist -iname '*.AppImage' | head -n1)
+          chmod +x "$appimage"
+          echo "LIBRESPRITE_BIN=$PWD/$appimage" >> "$GITHUB_ENV"
           echo "APPIMAGE_EXTRACT_AND_RUN=1" >> "$GITHUB_ENV"
       - name: Integration tests
         run: pytest tests/integration
