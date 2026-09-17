@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Design notes: not ready to be public yet (unlike the sibling warhex repo,
+# where docs/ is committed).
+docs/
+
+# Local scratch sprites/exports from manual testing.
+*.ase
+*.aseprite
+!tests/**/*.ase
