@@ -8,11 +8,20 @@ real Aseprite -- LibreSprite forked before Aseprite switched to Lua and has its 
 scripting API instead, so none of those servers work against it. This one is written directly
 against LibreSprite's JS API and CLI batch flags.
 
+This is a personal project, scaffolded by Claude Code and implemented by Codex against the
+task backlog in [docs/Tasks/Roadmap.md](docs/Tasks/Roadmap.md). See
+[docs/Design-Notes/LibreSprite-Scripting-API.md](docs/Design-Notes/LibreSprite-Scripting-API.md)
+for what's confirmed working vs. broken in LibreSprite's headless scripting API, verified
+against a real binary -- read it before assuming a script-API call works headlessly just
+because it exists in LibreSprite's source. `docs/` is a local Obsidian vault, gitignored for
+now (not yet ready to be public, unlike the sibling `warhex` repo where `docs/` is committed).
+
 ## Requirements
 
 - Python 3.10+
 - A [LibreSprite](https://github.com/LibreSprite/LibreSprite) binary on `PATH`, or point
-  `LIBRESPRITE_BIN` at one. CI downloads the latest release AppImage; there's no bundled binary.
+  `LIBRESPRITE_BIN` at one. CI downloads the latest release's Linux AppImage; there's no
+  binary bundled with this repo.
 
 ## Usage
 
