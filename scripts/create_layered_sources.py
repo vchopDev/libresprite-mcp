@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 from pathlib import Path
 
+from libresprite_mcp.asset_paths import resolve_assets_root
 from libresprite_mcp.client import LibreSpriteClient
 
 CATEGORIES = ("ui", "terrain", "resources", "buildings", "units", "fx")
@@ -18,21 +18,18 @@ def js_string(value: str) -> str:
     return json.dumps(value)
 
 
-def default_assets_root() -> Path:
-    sibling_root = Path(__file__).resolve().parents[2]
-    return sibling_root / "Strategic-War-Game" / "warhex" / "assets" / "art"
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--assets-root",
         type=Path,
-        default=default_assets_root(),
-        help="WarHex assets/art directory (or set WARHEX_ASSETS_ROOT).",
+        help="Downstream assets/art directory (or set DOWNSTREAM_ASSETS_ROOT).",
     )
     args = parser.parse_args()
-    root = Path(os.environ.get("WARHEX_ASSETS_ROOT", str(args.assets_root))).resolve()
+    try:
+        root = resolve_assets_root(args.assets_root)
+    except ValueError as exc:
+        parser.error(str(exc))
     files = [
         path
         for category in CATEGORIES

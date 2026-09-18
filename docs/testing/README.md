@@ -118,12 +118,12 @@ explicit environment to both its `--version` preflight and every script
 process; `APPDATA` and `LOCALAPPDATA` should point at a writable isolated
 profile for headless runs.
 
-## Testing against a downstream asset pipeline (e.g. Warhex)
+## Testing against a downstream asset pipeline
 
 `libresprite-mcp` itself has no built-in assumption about which project
 consumes it — `scripts/create_layered_sources.py` and
 `scripts/verify_layered_sources.py` take an explicit `--assets-root` (or
-`WARHEX_ASSETS_ROOT` env var); there is no default that assumes a specific
+`DOWNSTREAM_ASSETS_ROOT` env var); there is no default that assumes a specific
 sibling repo exists. Point it at any project's asset tree laid out as
 `assets/art/{ui,terrain,resources,buildings,units,fx}` with a
 `assets/art/asset_manifest.json` logical-ID manifest.

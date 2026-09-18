@@ -70,3 +70,21 @@ def test_run_script_decodes_native_exit_and_passes_explicit_environment(monkeypa
     for _, kwargs in calls:
         assert kwargs["env"]["APPDATA"] == str(profile)
         assert kwargs["env"]["LOCALAPPDATA"] == str(profile)
+
+
+def test_run_script_reports_script_errors_written_to_stdout(monkeypatch, workdir):
+    binary = workdir / "libresprite.exe"
+    binary.write_bytes(b"placeholder")
+    calls = []
+
+    def fake_run(*args, **kwargs):
+        calls.append((args, kwargs))
+        if len(calls) == 1:
+            return _completed(0, stdout="LibreSprite 1.3.0\n")
+        return _completed(0, stdout="InternalError: Method exception: cel already exists\n")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    client = LibreSpriteClient(str(binary))
+    with pytest.raises(LibreSpriteError, match="cel already exists"):
+        client.run_script("layer.addCel(0); layer.addCel(0);")

@@ -17,7 +17,14 @@ from collections.abc import Mapping
 from pathlib import Path
 
 DEFAULT_TIMEOUT = 30.0
-_ERROR_MARKERS = ("ReferenceError", "TypeError", "SyntaxError", "Error: [")
+_ERROR_MARKERS = (
+    "ReferenceError",
+    "TypeError",
+    "SyntaxError",
+    "InternalError",
+    "Error:",
+    "Error: [",
+)
 _WINDOWS_ERROR_MODE = 0x8001  # SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX
 _NATIVE_EXIT_CODES = {
     0xC0000135: (
@@ -165,7 +172,8 @@ class LibreSpriteClient:
 
         if result.returncode != 0:
             raise LibreSpriteError(_format_process_failure(result.returncode, result.stderr))
-        if any(marker in result.stderr for marker in _ERROR_MARKERS):
-            raise LibreSpriteError(f"Script error: {result.stderr.strip()}")
+        diagnostics = "\n".join(part for part in (result.stderr, result.stdout) if part)
+        if any(marker in diagnostics for marker in _ERROR_MARKERS):
+            raise LibreSpriteError(f"Script error: {diagnostics.strip()}")
 
         return result.stdout
