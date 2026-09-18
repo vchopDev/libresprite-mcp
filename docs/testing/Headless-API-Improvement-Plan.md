@@ -81,7 +81,9 @@ naming.
 | `setSpriteTransparentColor`, `trimSprite`, `setPixelFormat` | No |
 | `addFrame`, `addEmptyFrame` | Yes — `sprite.addFrame()` / `.addEmptyFrame()` |
 | `removeFrame` | **Yes, as of 2026-09-18** — `sprite.removeFrame(index)`, refuses to remove the sprite's last frame |
-| `addEmptyFramesTo`, `copyFrame`, `setTotalFrames`, `setFrameDuration`, `setFrameRangeDuration`, `moveFrame` | No |
+| `moveFrame` | **Yes, as of 2026-09-18** — `sprite.moveFrame(frame, beforeFrame)`, throws on out-of-range indices instead of the native silent no-op |
+| `copyFrame` | **Yes, as of 2026-09-18** — `sprite.copyFrame(fromFrame, newFrame)`, `newFrame` optional (defaults to the end), throws on out-of-range indices |
+| `addEmptyFramesTo`, `setTotalFrames`, `setFrameDuration`, `setFrameRangeDuration` | No |
 | `setCelPosition` | Yes — `cel.setPosition()` |
 | `setCelOpacity` | **Yes, as of 2026-09-18** — `cel.opacity` getter/setter, validated to `[0,255]` |
 | `addCel`, `clearCel`, `moveCel`, `copyCel`, `swapCel` | No |
@@ -102,6 +104,24 @@ suites (still pass). `moveFrame`/`copyFrame` were deliberately left out of this
 batch — `moveFrame`'s native implementation silently no-ops on invalid input
 (mirrors the old `crop()` problem) and needs its own bounds-checked wrapper
 plus a closer read before it's safe to add; better as its own small change.
+
+**Status 2026-09-18 (L4, Claude)**: `moveFrame`/`copyFrame` are now bound too,
+on the same `codex-headless-api-p1` branch, still local/uncommitted-to-upstream
+(no push, no PR). `DocumentApi::copyFrame` turned out to have the same
+unguarded-bounds shape as `moveFrame` — no native validation at all on either
+`frame_t` argument, confirmed by reading `document_api.cpp` before writing the
+wrapper — so both bindings validate frame indices in the script layer and
+throw `"Frame index is outside the sprite frame range"` (matching the message
+`addEmptyFrame` already uses) rather than letting the native call silently
+no-op or grow the frame count with an unpositioned insert. Tested in
+`tests/scripts/move_copy_frame.js`: bounds-check throws for both methods, a
+real reorder/duplicate that a naive frame-count check wouldn't catch (the
+fixture's only real cel is tracked through the move and the copy by pixel
+content, since `data/splash.ase` has no background layer and non-background
+layers don't get an auto-created cel on new frames), and save/reopen
+persistence. Full existing suite (`document_api_p1.js`, `document_api.js`,
+`frame_tags.js`, `png_layers_repro.js`) re-run clean, no regressions.
+`SCRIPTING.local.md` updated with both signatures.
 
 Prioritization from this matrix:
 
