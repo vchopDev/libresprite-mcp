@@ -7,7 +7,7 @@ name = "libresprite-mcp"
 version = "0.1.0"
 description = "MCP server for driving LibreSprite headlessly to generate and edit pixel art"
 readme = "README.md"
-license = "GPL-2.0-only"
+license = "0BSD"
 requires-python = ">=3.10"
 authors = [{ name = "vchopDev" }]
 dependencies = [
