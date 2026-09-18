@@ -8,9 +8,11 @@ build/
 .venv/
 venv/
 
-# Design notes: not ready to be public yet (unlike the sibling warhex repo,
-# where docs/ is committed).
+# Local design notes are kept out of the published tree for now. Public testing
+# documentation is tracked explicitly below.
 docs/
+!docs/testing/
+!docs/testing/README.md
 
 # Local scratch sprites/exports from manual testing.
 *.ase
@@ -20,3 +22,4 @@ docs/
 # LibreSprite runtime data redirected here for the Codex MCP server.
 .libresprite-appdata/
 .test-temp/
+.tmp/

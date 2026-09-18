@@ -9,12 +9,9 @@ scripting API instead, so none of those servers work against it. This one is wri
 against LibreSprite's JS API and CLI batch flags.
 
 This is a personal project, scaffolded by Claude Code and implemented by Codex against the
-task backlog in [docs/Tasks/Roadmap.md](docs/Tasks/Roadmap.md). See
-[docs/Design-Notes/LibreSprite-Scripting-API.md](docs/Design-Notes/LibreSprite-Scripting-API.md)
-for what's confirmed working vs. broken in LibreSprite's headless scripting API, verified
-against a real binary -- read it before assuming a script-API call works headlessly just
-because it exists in LibreSprite's source. The repository is public, and the testing notes
-are in [docs/testing/README.md](docs/testing/README.md).
+task backlog tracked in the repository's GitHub issues. The repository is public, and the
+testing notes are in [docs/testing/README.md](docs/testing/README.md). Local development
+notes about LibreSprite's scripting API are kept in `docs/Design-Notes/`.
 
 ## Related LibreSprite fork
 

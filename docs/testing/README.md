@@ -81,18 +81,44 @@ $env:Path = "C:\msys64\ucrt64\bin;$env:Path"
 
 The verified baseline result is `7 passed`.
 
+## Test the Warhex asset batch
+
+The generated production assets live in the sibling Warhex repository under
+`assets/art/{ui,terrain,resources,buildings,units,fx}`. The logical-ID manifest
+is `assets/art/asset_manifest.json`.
+
+Verify the layered `.ase` sources with the patched local LibreSprite build:
+
+```powershell
+$env:APPDATA = 'C:\Users\victo\Projects\AI-Projects\libresprite-mcp\.tmp\appdata'
+$env:LOCALAPPDATA = $env:APPDATA
+$env:LIBRESPRITE_BIN = 'C:\Users\victo\Projects\AI-Projects\Libresprite\build-codex-phase2\bin\libresprite.exe'
+$env:WARHEX_ASSETS_ROOT = 'C:\Users\victo\Projects\AI-Projects\Strategic-War-Game\warhex\assets\art'
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+& '.\.venv\Scripts\python.exe' 'scripts\verify_layered_sources.py' --assets-root $env:WARHEX_ASSETS_ROOT
+```
+
+The asset batch check expects 60 production PNGs, 60 matching `.ase` sources,
+52 logical manifest IDs, and no missing manifest references. The PNG audit also
+checks the category dimensions and the allowed Sangue e Ferro palette.
+
+On Windows installations where pytest cannot scan the default
+`AppData\Local\Temp\pytest-of-<user>` directory, pass a writable repository
+temporary directory explicitly:
+
+```powershell
+& '.\.venv\Scripts\python.exe' -m pytest -q --basetemp 'C:\path\to\libresprite-mcp\.tmp\pytest'
+```
+
 ## Release gate for MCP feature tools
 
-The fork PRs are merged:
-
-- Frame tags: https://github.com/vchopDev/LibreSprite/pull/1
-- Layer/frame creation: https://github.com/vchopDev/LibreSprite/pull/2
-
-Do not add or un-stub the corresponding MCP tools until each PR has been
-merged and its changes are present in a tagged LibreSprite release. The local
-release-like build above verifies the combined code before tagging, but CI
-currently fetches the latest release from `LibreSprite/LibreSprite`, not from
-the fork; a fork-only release will not automatically become the CI binary.
+The public `vchopDev/LibreSprite` fork contains the development patches for
+frame tags and layer/frame creation. They are not yet present in a tagged
+`LibreSprite/LibreSprite` release, so the corresponding MCP tools must remain
+behind the release gate. The local release-like build verifies the combined
+code, but CI currently fetches the latest release from
+`LibreSprite/LibreSprite`, not from the fork; a fork-only build will not
+automatically become the CI binary.
 
 After a release consumed by CI contains the patches, set `LIBRESPRITE_BIN` to
 that release,
