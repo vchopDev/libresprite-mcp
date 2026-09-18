@@ -83,10 +83,15 @@ naming.
 | `removeFrame` | **Yes, as of 2026-09-18** — `sprite.removeFrame(index)`, refuses to remove the sprite's last frame |
 | `moveFrame` | **Yes, as of 2026-09-18** — `sprite.moveFrame(frame, beforeFrame)`, throws on out-of-range indices instead of the native silent no-op |
 | `copyFrame` | **Yes, as of 2026-09-18** — `sprite.copyFrame(fromFrame, newFrame)`, `newFrame` optional (defaults to the end), throws on out-of-range indices |
-| `addEmptyFramesTo`, `setTotalFrames`, `setFrameDuration`, `setFrameRangeDuration` | No |
+| `setFrameDuration` | **Yes, as of 2026-09-18** — `sprite.setFrameDuration(frame, msecs)`, throws on an out-of-range frame or a duration outside `[1,65535]` instead of the native silent no-op/clamp |
+| `setFrameRangeDuration` | **Yes, as of 2026-09-18** — `sprite.setFrameRangeDuration(from, to, msecs)`, throws instead of relying on native `ASSERT`s (compiled out in release) |
+| `addEmptyFramesTo`, `setTotalFrames` | No |
 | `setCelPosition` | Yes — `cel.setPosition()` |
 | `setCelOpacity` | **Yes, as of 2026-09-18** — `cel.opacity` getter/setter, validated to `[0,255]` |
-| `addCel`, `clearCel`, `moveCel`, `copyCel`, `swapCel` | No |
+| `addCel` | **Yes, as of 2026-09-18** — `layer.addCel(frame)`, creates a blank sprite-sized cel; throws if the frame already has one (native only `ASSERT`s this) |
+| `clearCel` | **Yes, as of 2026-09-18** — `layer.clearCel(frame)`, no-op if the frame has no cel |
+| `copyCel` | **Yes, as of 2026-09-18** — `layer.copyCel(fromFrame, destinationLayer, toFrame)`, duplicates a cel across layers/frames |
+| `moveCel`, `swapCel` | No |
 | `newLayer` | Yes — `sprite.newLayer()` |
 | `removeLayer` | **Yes, as of 2026-09-18** — `sprite.removeLayer(layer)`, refuses to remove the sprite's last layer or a layer from another sprite |
 | `newLayerFolder`, `restackLayerAfter`, `restackLayerBefore`, `backgroundFromLayer`, `layerFromBackground`, `flattenLayers`, `duplicateLayerAfter`, `duplicateLayerBefore` | No |
@@ -122,6 +127,29 @@ layers don't get an auto-created cel on new frames), and save/reopen
 persistence. Full existing suite (`document_api_p1.js`, `document_api.js`,
 `frame_tags.js`, `png_layers_repro.js`) re-run clean, no regressions.
 `SCRIPTING.local.md` updated with both signatures.
+
+**Status 2026-09-18 (L6 batch 1, Claude)**: implemented the two items Codex's
+C7 report (below) named as actual blockers for animation assembly, ahead of
+the rest of the P2 list — frame timing (`sprite.setFrameDuration()`,
+`sprite.setFrameRangeDuration()`, plus a `sprite.frameDuration()` read
+added for symmetry) and cel content transfer (`layer.addCel()`,
+`layer.clearCel()`, `layer.copyCel()`), so a pipeline that renders each
+animation frame as a separate image can place that pixel data into an
+independent cel on a specific layer/frame. `addCel()` creates a blank image
+sized to the sprite (matching pixel format) and hands back the `Cel` so the
+caller paints it via the existing `image.putPixel()`/`putImageData()`.
+Frame-tag bindings turned out to already be complete from earlier work
+(`addTag`/`removeTag`/`fromFrame`/`toFrame`/`setFrameRange`/`name`/`color`/
+`aniDir`), so nothing further was needed there. Same branch
+(`codex-headless-api-p1`), still local-only. Tested in
+`tests/scripts/frame_duration.js` and `tests/scripts/cel_transfer.js`:
+bounds-check throws, real mutation, save/reopen persistence. Full existing
+suite re-run clean. `SCRIPTING.local.md` updated. Remaining P2 items
+(`setPixelFormat`, `trimSprite`, `setSpriteTransparentColor`,
+`newLayerFolder`, `restackLayerAfter`/`Before`, `flattenLayers`,
+`duplicateLayerAfter`/`Before`, `moveCel`/`swapCel`, `flipImage`) are
+authoring conveniences per Codex's own report, not static-batch blockers —
+left for a later batch unless something changes their priority.
 
 Prioritization from this matrix:
 
