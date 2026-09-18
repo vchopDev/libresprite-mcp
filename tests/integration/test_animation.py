@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 from pathlib import Path
@@ -30,7 +31,31 @@ def client() -> LibreSpriteClient:
     return LibreSpriteClient()
 
 
-def test_assemble_animation_roundtrip(client, workdir):
+@pytest.fixture
+def animation_api(client, workdir):
+    """Skip animation tests when CI provisions an upstream binary without C9 bindings."""
+    probe = workdir / "animation-api-probe.png"
+    probe.write_bytes(blank_png(1, 1, (0, 0, 0, 255)))
+    result = client.run_script(
+        f"""
+        var doc=app.open({json.dumps(str(probe.resolve()))});
+        if(!doc) throw new Error("could not open animation API probe");
+        var sprite=doc.sprite;
+        console.log("animation_api_available=" + (
+            typeof sprite.newLayer === "function" &&
+            typeof sprite.addEmptyFrame === "function" &&
+            typeof sprite.removeFrame === "function" &&
+            typeof sprite.removeLayer === "function" &&
+            typeof sprite.setFrameDuration === "function" &&
+            typeof sprite.addTag === "function"
+        ));
+        """
+    )
+    if "animation_api_available=true" not in result:
+        pytest.skip("configured LibreSprite binary does not expose the C9 animation bindings")
+
+
+def test_assemble_animation_roundtrip(client, workdir, animation_api):
     frames = []
     for index, color in enumerate(((255, 0, 0, 255), (0, 255, 0, 255), (0, 0, 255, 255))):
         frame = workdir / f"frame-{index}.png"
@@ -42,7 +67,7 @@ def test_assemble_animation_roundtrip(client, workdir):
     assert output.is_file()
 
 
-def test_duplicate_cel_failure_is_reported(client, workdir):
+def test_duplicate_cel_failure_is_reported(client, workdir, animation_api):
     frame = workdir / "frame.png"
     frame.write_bytes(blank_png(4, 4, (1, 2, 3, 255)))
     script = f"""
