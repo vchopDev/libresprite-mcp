@@ -38,6 +38,7 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = [".", "src"]
 markers = [
     "integration: requires a real LibreSprite binary (set LIBRESPRITE_BIN)",
 ]
