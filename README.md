@@ -13,8 +13,17 @@ task backlog in [docs/Tasks/Roadmap.md](docs/Tasks/Roadmap.md). See
 [docs/Design-Notes/LibreSprite-Scripting-API.md](docs/Design-Notes/LibreSprite-Scripting-API.md)
 for what's confirmed working vs. broken in LibreSprite's headless scripting API, verified
 against a real binary -- read it before assuming a script-API call works headlessly just
-because it exists in LibreSprite's source. `docs/` is a local Obsidian vault, gitignored for
-now (not yet ready to be public, unlike the sibling `warhex` repo where `docs/` is committed).
+because it exists in LibreSprite's source. The repository is public, and the testing notes
+are in [docs/testing/README.md](docs/testing/README.md).
+
+## Related LibreSprite fork
+
+The MCP server and tooling live in this repository. Development patches for the headless
+LibreSprite scripting/API gaps live in the public
+[vchopDev/LibreSprite fork](https://github.com/vchopDev/LibreSprite), which is based on
+[LibreSprite/LibreSprite](https://github.com/LibreSprite/LibreSprite). The released
+LibreSprite builds do not yet include those patches; use the fork when testing layer/frame
+creation or frame-tag support, and use a released binary for the currently supported API.
 
 ## Requirements
 
@@ -57,7 +66,8 @@ Known limits), so `create_sprite` writes a minimal blank PNG itself and hands it
 
 ## Known limits
 
-LibreSprite's scripting API runs against a `UIContext` that batch mode never marks as having
+With an unpatched released LibreSprite binary, the scripting API runs against a `UIContext`
+that batch mode never marks as having
 an "active document." Anything routed through the command system (`app.command.*`) is
 therefore disabled headlessly, confirmed empirically for `NewLayer`, `NewFrame`, and
 `CanvasSize`-via-command. This blocks, in this version:
@@ -74,8 +84,8 @@ therefore disabled headlessly, confirmed empirically for `NewLayer`, `NewFrame`,
 
 Mutations that go through LibreSprite's `Transaction` API directly instead of the command
 system (`sprite.resize()`, the `sprite.width`/`height` setters) are unaffected and confirmed
-working headlessly. Fixing the two limits above requires patching LibreSprite itself --
-tracked separately, not in this repo's v0.1 scope.
+working headlessly. The corresponding development patches are tracked in the related fork;
+they are not part of the released LibreSprite binaries yet.
 
 ## Animating with templates
 
@@ -91,3 +101,9 @@ Early scaffold. `create_sprite`, `resize_canvas`, `export_png`, and `get_png_dat
 implemented and covered by integration tests. `get_pixel`/`set_pixel` are stubbed
 (`NotImplementedError`) pending a spike into LibreSprite's `pixelColor` packing API -- see the
 open issues on this repo for the current task backlog.
+
+## License
+
+This project is released under the [Zero-Clause BSD (0BSD)](LICENSE) license. It permits
+use, modification, redistribution, and commercial use without an attribution requirement,
+and is provided without warranty.
