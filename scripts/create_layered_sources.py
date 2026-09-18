@@ -32,9 +32,7 @@ def main() -> None:
         help="WarHex assets/art directory (or set WARHEX_ASSETS_ROOT).",
     )
     args = parser.parse_args()
-    root = Path(
-        os.environ.get("WARHEX_ASSETS_ROOT", str(args.assets_root))
-    ).resolve()
+    root = Path(os.environ.get("WARHEX_ASSETS_ROOT", str(args.assets_root))).resolve()
     files = [
         path
         for category in CATEGORIES

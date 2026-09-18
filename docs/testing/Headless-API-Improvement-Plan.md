@@ -66,18 +66,60 @@ Required test properties:
 ### 2. Prefer existing `DocumentApi` and `Transaction` paths
 
 The next API work should expose existing native operations instead of repairing
-the whole command system. The current `DocumentApi` already contains candidate
-surfaces for:
+the whole command system. Each candidate needs a small binding and a focused
+headless persistence test. Do not expose the entire header as a single large
+feature; keep changes small, reviewable, and aligned with existing script API
+naming.
 
-- frame copy, removal, resizing, ordering, and duration;
-- cel add, clear, copy, move, swap, position, and opacity;
-- layer folders, removal, restacking, duplication, and flattening;
-- sprite crop, trim, transparent color, and pixel format changes;
-- safe image and palette operations where the native implementation is stable.
+#### Coverage matrix (2026-09-18, read against `document_api.h` and the current
+`src/app/script/api/*.cpp` bindings — not just this plan's earlier summary)
 
-Each candidate needs a small binding and a focused headless persistence test.
-Do not expose the entire header as a single large feature; keep changes small,
-reviewable, and aligned with existing script API naming.
+| `DocumentApi` method | Bound in script today? |
+| --- | --- |
+| `setSpriteSize` | Yes — `sprite.width=` / `.height=` / `.resize()` |
+| `cropSprite` | **Yes, as of 2026-09-18** — `sprite.crop()` was a dead-code no-op, now wired to `cropSprite()`. See [[Design-Notes/LibreSprite-Scripting-API]]. |
+| `setSpriteTransparentColor`, `trimSprite`, `setPixelFormat` | No |
+| `addFrame`, `addEmptyFrame` | Yes — `sprite.addFrame()` / `.addEmptyFrame()` |
+| `removeFrame` | **Yes, as of 2026-09-18** — `sprite.removeFrame(index)`, refuses to remove the sprite's last frame |
+| `addEmptyFramesTo`, `copyFrame`, `setTotalFrames`, `setFrameDuration`, `setFrameRangeDuration`, `moveFrame` | No |
+| `setCelPosition` | Yes — `cel.setPosition()` |
+| `setCelOpacity` | **Yes, as of 2026-09-18** — `cel.opacity` getter/setter, validated to `[0,255]` |
+| `addCel`, `clearCel`, `moveCel`, `copyCel`, `swapCel` | No |
+| `newLayer` | Yes — `sprite.newLayer()` |
+| `removeLayer` | **Yes, as of 2026-09-18** — `sprite.removeLayer(layer)`, refuses to remove the sprite's last layer or a layer from another sprite |
+| `newLayerFolder`, `restackLayerAfter`, `restackLayerBefore`, `backgroundFromLayer`, `layerFromBackground`, `flattenLayers`, `duplicateLayerAfter`, `duplicateLayerBefore` | No |
+| `replaceImage`, `flipImage`, `flipImageWithMask` | No |
+| `copyToCurrentMask`, `setMaskPosition` | No |
+| `setPalette` | Partial — only reachable via `sprite.loadPalette(file)` (loads from disk); no direct in-script palette edit, blocked by the read crash above |
+
+**Status 2026-09-18**: the four P1 items above are implemented and tested
+(`tests/scripts/document_api_p1.js`, covers both the mutation and save/reopen
+persistence, plus the invalid-input error paths) on local branch
+`codex-headless-api-p1` in the `vchopDev/LibreSprite` fork. Committed locally
+only — not pushed, no PR, per the current no-upstream-interaction direction.
+Regression-checked against the existing `frame_tags.js` and `document_api.js`
+suites (still pass). `moveFrame`/`copyFrame` were deliberately left out of this
+batch — `moveFrame`'s native implementation silently no-ops on invalid input
+(mirrors the old `crop()` problem) and needs its own bounds-checked wrapper
+plus a closer read before it's safe to add; better as its own small change.
+
+Prioritization from this matrix:
+
+- **P1 (fix first — same shape as bindings that already work safely)**: fix
+  `sprite.crop()` to actually call `cropSprite()` (it's a silent landmine right
+  now, worse than an error); add `removeFrame` and `removeLayer` as the natural
+  complements to the existing `addFrame`/`addEmptyFrame`/`newLayer`; add
+  `setCelOpacity` next to the existing `setPosition`; add `moveFrame`/`copyFrame`
+  for frame reordering (useful for any animation-editing pipeline, not MCP-specific).
+- **P2 (more design, still native-safe)**: `setPixelFormat`,
+  `setSpriteTransparentColor`, `trimSprite`, `newLayerFolder`,
+  `restackLayerAfter`/`Before`, `flattenLayers`, `duplicateLayerAfter`/`Before`,
+  `addCel`/`clearCel`/`moveCel`/`copyCel`/`swapCel`, `flipImage`.
+- **P3 (deferred / blocked)**: anything palette-related beyond the existing
+  `loadPalette()` workaround — blocked on the unresolved native crash in
+  `sprite.palette` (investigated 2026-09-18, root cause not pinned down within
+  the agreed time box; see [[Design-Notes/LibreSprite-Scripting-API]]). Mask API
+  (`copyToCurrentMask`, `setMaskPosition`) — low priority, no known consumer yet.
 
 ### 3. Stabilize the data-safety edges
 
