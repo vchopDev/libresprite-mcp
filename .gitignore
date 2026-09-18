@@ -10,9 +10,9 @@ venv/
 
 # Local design notes are kept out of the published tree for now. Public testing
 # documentation is tracked explicitly below.
-docs/
+docs/*
 !docs/testing/
-!docs/testing/README.md
+!docs/testing/*
 
 # Local scratch sprites/exports from manual testing.
 *.ase

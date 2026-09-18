@@ -3,6 +3,11 @@
 This section documents the local and integration checks for the LibreSprite
 patches tracked by issues #8/#9 and #13/#14.
 
+For the current architectural direction and the headless API backlog, see
+[Headless-API-Improvement-Plan.md](Headless-API-Improvement-Plan.md). The plan
+records community feedback as context; it is not a LibreSprite maintainer
+commitment or an assumption that LibreSprite wants to adopt the MCP server.
+
 ## Environment
 
 The verified Windows setup is:

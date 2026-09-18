@@ -1,0 +1,144 @@
+# Headless API improvement plan
+
+Status: planning document for `libresprite-mcp` and the public development fork.
+This is not an upstream LibreSprite roadmap and does not imply that LibreSprite
+maintainers want to adopt the MCP server.
+
+## Community context
+
+The LibreSprite moderator gave the following direction:
+
+- The project is finishing a release and is currently in a feature freeze. New
+  feature PRs can be sent, but they may not receive review until after the
+  release unless they are urgent bug fixes.
+- The project is defining its code, GitHub, and AI contribution policy. The
+  admins are considering a simplified version of
+  [`llama.cpp`'s `AGENTS.md`](https://github.com/ggml-org/llama.cpp/blob/master/AGENTS.md).
+- The project is not categorically opposed to AI-assisted workflows, but wants
+  a contribution policy and a practical middle ground.
+- For MCP specifically, a future in-process script may become possible if more
+  of the missing functionality is moved into LibreSprite first. The immediate
+  priority is making headless LibreSprite more useful.
+
+These comments are useful constraints for this repository, not a request to
+merge or adopt `libresprite-mcp`.
+
+## Current baseline
+
+`libresprite-mcp` currently uses a conservative path-in/path-out model:
+
+1. Start a fresh `libresprite -b --script` process.
+2. Open one document from disk.
+3. Apply a mutation through the JavaScript object model.
+4. Save the document and return the path or data.
+
+This is slower than a persistent session, but it avoids depending on a shared
+GUI document or a long-lived JavaScript process. The current Windows binary
+also showed that `--shell` is not a usable persistent transport, so correctness
+and API coverage come before performance work.
+
+The important implementation distinction is:
+
+- `app.command.*` is gated by the GUI `UIContext` and is not reliable after a
+  headless `app.open()`.
+- Direct `Transaction`/`DocumentApi` operations are the safer path for headless
+  bindings and already back operations such as sprite resizing.
+- The fork contains local bindings for frame tags and layer/frame creation.
+  They are not yet available in a tagged upstream LibreSprite release, so the
+  corresponding MCP tools remain release-gated.
+
+## Direction
+
+### 1. Improve headless correctness first
+
+Every new binding should be tested in a fresh headless process and then again
+after save/reopen. The test must prove both the mutation and the persisted file
+state; a JavaScript call returning without an exception is not sufficient.
+
+Required test properties:
+
+- no active GUI document or window is required;
+- invalid layer/frame/index inputs fail with a clear script error;
+- the result survives save and reopen;
+- the test works with the same binary layout used by CI;
+- the operation does not depend on state left behind by a previous tool call.
+
+### 2. Prefer existing `DocumentApi` and `Transaction` paths
+
+The next API work should expose existing native operations instead of repairing
+the whole command system. The current `DocumentApi` already contains candidate
+surfaces for:
+
+- frame copy, removal, resizing, ordering, and duration;
+- cel add, clear, copy, move, swap, position, and opacity;
+- layer folders, removal, restacking, duplication, and flattening;
+- sprite crop, trim, transparent color, and pixel format changes;
+- safe image and palette operations where the native implementation is stable.
+
+Each candidate needs a small binding and a focused headless persistence test.
+Do not expose the entire header as a single large feature; keep changes small,
+reviewable, and aligned with existing script API naming.
+
+### 3. Stabilize the data-safety edges
+
+Palette access remains a separate native safety issue: reading
+`doc.sprite.palette` caused an access violation in the tested Windows binary.
+Before adding palette MCP tools, identify a safe native path that works across
+fresh processes and indexed/RGB documents. A workaround that only works after
+`loadPalette()` in the same process is not enough for the current architecture.
+
+Bindings should also standardize:
+
+- bounds checking and predictable error messages;
+- explicit frame/layer identifiers instead of hidden active-document state;
+- transaction lifetime and save behavior;
+- version/feature detection so the MCP layer can explain when a released
+  binary lacks a newer binding.
+
+### 4. Keep the MCP layer thin and optional
+
+The MCP server remains an external experiment and compatibility layer. It should
+call stable headless bindings, report unsupported capabilities clearly, and not
+define what LibreSprite's public API must become.
+
+An in-process LibreSprite script could be a future direction, but it should only
+be evaluated after the headless object model is useful on its own and after the
+LibreSprite project has expressed interest in that integration. We should not
+assume that a working MCP prototype is automatically wanted upstream.
+
+## Prioritized backlog
+
+| Priority | Area | Direction | Gate |
+| --- | --- | --- | --- |
+| P0 | Regression harness | Keep one headless script and save/reopen test per binding | Local source build and CI-compatible binary |
+| P0 | Frame tags | Preserve the fork implementation and test coverage | Upstream review plus tagged release |
+| P0 | Layer/frame creation | Preserve the `DocumentApi` implementation and test coverage | Upstream review plus tagged release |
+| P1 | Frame/cel operations | Expose the smallest useful existing `DocumentApi` methods | Native behavior confirmed headlessly |
+| P1 | Layer operations | Add folder, duplicate, remove, and restack bindings incrementally | Persistence and ownership tests |
+| P1 | Error contract | Normalize bounds, missing-cel, and unsupported-feature errors | Cross-version smoke tests |
+| P2 | Palette safety | Find a native safe path before adding tools | Crash-free fresh-process tests |
+| P2 | Export metadata | Evaluate frame-tag-aware export and sprite-sheet support | API exists in released binary |
+| P3 | Persistent session | Revisit only after API correctness; current `--shell` spike failed | Stable upstream transport |
+
+## Explicit non-goals
+
+- Do not pick up issue #10 unless a required operation has no reasonable
+  `DocumentApi`/`Transaction` equivalent. It remains the deferred fallback.
+- Do not un-stub frame-tag or layer/frame MCP tools before the bindings exist in
+  a tagged LibreSprite release consumed by CI.
+- Do not open new upstream feature PRs during the release freeze unless the
+  maintainers invite the work or it is an urgent bug fix.
+- Do not describe the MCP server as an official LibreSprite feature.
+
+## Proposed workflow after the release
+
+1. Re-read the final LibreSprite contribution and AI policy.
+2. Open or update a focused issue describing one headless API gap and its
+   persistence test, before preparing a PR.
+3. Implement and review the smallest `DocumentApi`/`Transaction` binding in the
+   public fork.
+4. Build on Windows and at least one non-Windows target where practical.
+5. If maintainers are interested, submit a focused upstream contribution that
+   follows the project policy and clearly discloses AI assistance where required.
+6. After a tagged release contains the binding, add the corresponding MCP tool
+   and integration test in this repository.

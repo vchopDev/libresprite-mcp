@@ -12,6 +12,8 @@ This is a personal project, scaffolded by Claude Code and implemented by Codex a
 task backlog tracked in the repository's GitHub issues. The repository is public, and the
 testing notes are in [docs/testing/README.md](docs/testing/README.md). Local development
 notes about LibreSprite's scripting API are kept in `docs/Design-Notes/`.
+The current headless API direction is documented in
+[docs/testing/Headless-API-Improvement-Plan.md](docs/testing/Headless-API-Improvement-Plan.md).
 
 ## Related LibreSprite fork
 
