@@ -5,6 +5,7 @@ not runnable on a dev machine without LibreSprite installed, and CI
 provisions the binary before running this file (see .github/workflows/ci.yml).
 """
 
+import base64
 import os
 
 import pytest
@@ -50,3 +51,60 @@ def test_get_png_data(client, tmp_path):
     tools.create_sprite(client, sprite_path, width=4, height=4)
     b64 = tools.get_png_data_b64(client, sprite_path)
     assert isinstance(b64, str) and len(b64) > 0
+
+
+def test_pixel_roundtrip(client, tmp_path):
+    sprite_path = str(tmp_path / "sprite.ase")
+    tools.create_sprite(client, sprite_path, width=4, height=4)
+
+    tools.set_pixel(client, sprite_path, x=1, y=2, r=17, g=34, b=51, a=68)
+    assert tools.get_pixel(client, sprite_path, x=1, y=2) == {
+        "r": 17,
+        "g": 34,
+        "b": 51,
+        "a": 68,
+    }
+
+
+def test_set_pixel_rejects_invalid_channel(client, tmp_path):
+    sprite_path = str(tmp_path / "sprite.ase")
+    with pytest.raises(ValueError, match="r must be"):
+        tools.set_pixel(client, sprite_path, x=0, y=0, r=256, g=0, b=0)
+
+
+def test_set_pixels_bulk_roundtrip(client, tmp_path):
+    sprite_path = str(tmp_path / "sprite.ase")
+    tools.create_sprite(client, sprite_path, width=2, height=2)
+    raw = bytes(
+        (
+            11,
+            22,
+            33,
+            44,
+            55,
+            66,
+            77,
+            88,
+            91,
+            92,
+            93,
+            94,
+            95,
+            96,
+            97,
+            98,
+        )
+    )
+
+    tools.set_pixels_bulk(client, sprite_path, base64.b64encode(raw).decode("ascii"))
+    assert tools.get_pixel(client, sprite_path, x=0, y=0) == {
+        "r": 11,
+        "g": 22,
+        "b": 33,
+        "a": 44,
+    }
+
+
+def test_set_pixels_bulk_rejects_invalid_base64(client, tmp_path):
+    with pytest.raises(ValueError, match="valid base64"):
+        tools.set_pixels_bulk(client, str(tmp_path / "sprite.ase"), "not base64!")

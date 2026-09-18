@@ -67,11 +67,23 @@ therefore disabled headlessly, confirmed empirically for `NewLayer`, `NewFrame`,
   be added from a script.
 - **Frame tags** (naming an animation range like "walk" or "idle"): no scripting binding exists
   for these at all, independent of the command-system issue above.
+- **Palette read/write** is unsafe in the installed Windows 1.1-dev binary: reading
+  `doc.sprite.palette` causes a native access violation in a fresh headless process. The
+  upstream `Palette` methods are usable only after `loadPalette()` in that same process, which
+  cannot safely recover an existing sprite palette across this repo's path-in/path-out calls.
 
 Mutations that go through LibreSprite's `Transaction` API directly instead of the command
 system (`sprite.resize()`, the `sprite.width`/`height` setters) are unaffected and confirmed
 working headlessly. Fixing the two limits above requires patching LibreSprite itself --
 tracked separately, not in this repo's v0.1 scope.
+
+## Animating with templates
+
+Headless scripts cannot create new frames, but they can edit frames that already exist in a
+hand-authored `.ase` template. Create the animation in LibreSprite's GUI with one explicit,
+unlinked cel per frame, save the template, then use `set_pixel`/`set_pixels_bulk` with the
+desired `frame` index. The per-frame cel images remain independent across save and reopen;
+linked or extended cels are not a supported template layout.
 
 ## Status
 

@@ -8,6 +8,7 @@ text only on stderr). Callers must not rely on the return code alone --
 
 from __future__ import annotations
 
+import ctypes
 import os
 import shutil
 import subprocess
@@ -16,10 +17,17 @@ from pathlib import Path
 
 DEFAULT_TIMEOUT = 30.0
 _ERROR_MARKERS = ("ReferenceError", "TypeError", "SyntaxError", "Error: [")
+_WINDOWS_ERROR_MODE = 0x8001  # SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX
 
 
 class LibreSpriteError(RuntimeError):
     """Raised when the LibreSprite subprocess fails or the script throws."""
+
+
+def _suppress_windows_crash_dialog() -> None:
+    """Prevent native LibreSprite crashes from opening a blocking Windows dialog."""
+    if os.name == "nt":
+        ctypes.windll.kernel32.SetErrorMode(_WINDOWS_ERROR_MODE)
 
 
 def resolve_binary(explicit: str | None = None) -> str:
@@ -55,6 +63,7 @@ class LibreSpriteClient:
             script_path = f.name
 
         try:
+            _suppress_windows_crash_dialog()
             result = subprocess.run(
                 [self.binary, "-b", "--script", script_path],
                 capture_output=True,

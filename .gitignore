@@ -16,3 +16,7 @@ docs/
 *.ase
 *.aseprite
 !tests/**/*.ase
+
+# LibreSprite runtime data redirected here for the Codex MCP server.
+.libresprite-appdata/
+.test-temp/

@@ -42,6 +42,34 @@ def get_png_data(path: str, layer: int = 0, frame: int = 0) -> str:
     return tools.get_png_data_b64(_get_client(), path, layer=layer, frame=frame)
 
 
+@mcp.tool()
+def get_pixel(path: str, x: int, y: int, layer: int = 0, frame: int = 0) -> dict[str, int]:
+    """Read one pixel as RGBA from a layer/frame."""
+    return tools.get_pixel(_get_client(), path, x, y, layer=layer, frame=frame)
+
+
+@mcp.tool()
+def set_pixel(
+    path: str,
+    x: int,
+    y: int,
+    r: int,
+    g: int,
+    b: int,
+    a: int = 255,
+    layer: int = 0,
+    frame: int = 0,
+) -> str:
+    """Write one RGBA pixel to a layer/frame."""
+    return tools.set_pixel(_get_client(), path, x, y, r, g, b, a=a, layer=layer, frame=frame)
+
+
+@mcp.tool()
+def set_pixels_bulk(path: str, data_b64: str, layer: int = 0, frame: int = 0) -> str:
+    """Write raw image bytes from base64 to a layer/frame."""
+    return tools.set_pixels_bulk(_get_client(), path, data_b64, layer=layer, frame=frame)
+
+
 def main() -> None:
     mcp.run()
 
