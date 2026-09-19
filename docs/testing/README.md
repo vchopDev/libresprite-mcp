@@ -15,7 +15,7 @@ shell before running any command below:
 
 ```powershell
 $env:LIBRESPRITE_SRC = 'path\to\your\LibreSprite\checkout'
-$env:LIBRESPRITE_BIN = "$env:LIBRESPRITE_SRC\build-codex-phase2\bin\libresprite.exe"
+$env:LIBRESPRITE_BIN = "$env:LIBRESPRITE_SRC\build-headless-api\bin\libresprite.exe"
 ```
 
 Commands under "Test this MCP repository" assume your shell is already at this
@@ -41,8 +41,8 @@ From PowerShell (with `LIBRESPRITE_SRC` set, see "Local paths" above):
 
 ```powershell
 $env:MSYSTEM = 'UCRT64'
-& 'C:\msys64\usr\bin\bash.exe' -lc "cmake -S '$env:LIBRESPRITE_SRC' -B '$env:LIBRESPRITE_SRC/build-codex-phase2' -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DRELEASE_TAG=ON -DRELEASE_VERSION=1.3.0 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++"
-& 'C:\msys64\usr\bin\bash.exe' -lc "cmake --build '$env:LIBRESPRITE_SRC/build-codex-phase2' --target libresprite --parallel 4"
+& 'C:\msys64\usr\bin\bash.exe' -lc "cmake -S '$env:LIBRESPRITE_SRC' -B '$env:LIBRESPRITE_SRC/build-headless-api' -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DRELEASE_TAG=ON -DRELEASE_VERSION=1.3.0 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++"
+& 'C:\msys64\usr\bin\bash.exe' -lc "cmake --build '$env:LIBRESPRITE_SRC/build-headless-api' --target libresprite --parallel 4"
 ```
 
 (cmake accepts a Windows-style path here; forward slashes avoid backslash-escaping
